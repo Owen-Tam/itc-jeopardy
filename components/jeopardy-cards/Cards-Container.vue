@@ -6,7 +6,7 @@
         v-for="question in category.questions"
         @click="openQuestion(question)"
         :questionInfo="question"
-        :used="used.includes(question.question)"
+        :used="used.includes(question.qid)"
         >{{ question.points }}</card
       >
     </div>
@@ -393,8 +393,8 @@ const openQuestion = function (questionInfo) {
   curQuestionInfo.value = questionInfo;
   openedQuestion.value = true;
 };
-const markQuestion = function (q) {
-  used.value.push(q);
+const markQuestion = function (qid) {
+  used.value.push(qid);
   localStorage.setItem("used", JSON.stringify(used.value));
 };
 </script>

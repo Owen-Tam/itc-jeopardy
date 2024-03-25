@@ -5,11 +5,22 @@
     </teleport>
     <div
       :style="cardStyle"
-      class="modal rounded-lg p-16 w-70vw h-60vh flex justify-center flex-col"
+      class="modal rounded-lg p-16 w-70vw mh-60vh flex justify-center flex-col"
     >
       <div class="grid items-center">
         <h2 class="text-4xl font-bold mb-10">{{ questionInfo.question }}</h2>
-        <ul class="list-none grid grid-cols-2 gap-5 grid-rows-2 text-2xl">
+        <div class="flex mb-5" v-if="questionInfo.images?.length > 0">
+          <img
+            v-for="(image, index) in questionInfo.images"
+            :key="index"
+            :src="images[image]"
+            class="max-w-50p max-h-300px"
+          />
+        </div>
+        <ul
+          :style="{ opacity: optionsRevealed ? 1 : 0 }"
+          class="list-none grid grid-cols-2 gap-5 grid-rows-2 text-2xl"
+        >
           <li
             v-for="(option, index) in questionInfo.options"
             :key="index"
@@ -21,24 +32,32 @@
           </li>
         </ul>
       </div>
+
       <div class="flex mt-10 space-x-4">
         <button
           class="px-4 py-2 text-white bg-red-500 rounded-md hover:bg-red-600"
-          @click="closeModal(true, questionInfo.question)"
+          @click="closeModal(true, questionInfo.qid)"
         >
           Close
         </button>
         <button
           class="px-4 py-2 text-black bg-white border border-white rounded-md"
-          @click="closeModal(false, questionInfo.question)"
+          @click="closeModal(false, questionInfo.qid)"
           v-if="!answerFound"
         >
           Close without Used
         </button>
         <button
           class="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600"
+          @click="revealOptions"
+          v-if="!optionsRevealed"
+        >
+          Reveal Options
+        </button>
+        <button
+          class="px-4 py-2 text-white bg-green-500 rounded-md hover:bg-green-600"
           @click="revealAnswer"
-          v-if="!answerFound"
+          v-if="!answerFound && optionsRevealed"
         >
           Reveal Answer
         </button>
@@ -48,6 +67,15 @@
 </template>
 
 <script setup lang="ts">
+import { filename } from "pathe/utils";
+
+const glob = import.meta.glob("~/assets/code/*.png", { eager: true });
+const images = Object.fromEntries(
+  Object.entries(glob).map(([key, value]: [string, any]) => [
+    filename(key),
+    value.default,
+  ])
+);
 const emit = defineEmits(["markQ", "close"]);
 const props = defineProps({
   questionInfo: {
@@ -115,15 +143,19 @@ const getOptionStyle = function (index: number) {
 };
 
 const answerFound = ref(false);
+const optionsRevealed = ref(false);
+const revealOptions = function () {
+  optionsRevealed.value = true;
+};
 
 const revealAnswer = function () {
   showCorrect();
   answerFound.value = true;
 };
 
-const closeModal = function (markAsUsed: boolean, question: string) {
+const closeModal = function (markAsUsed: boolean, qid: number) {
   emit("close");
-  if (markAsUsed) emit("markQ", question);
+  if (markAsUsed) emit("markQ", qid);
 };
 </script>
 
@@ -134,5 +166,11 @@ const closeModal = function (markAsUsed: boolean, question: string) {
 
 .h-60vh {
   height: 60vh;
+}
+.max-w-50p {
+  max-width: 50%;
+}
+.max-h-300px {
+  max-height: 200px;
 }
 </style>
